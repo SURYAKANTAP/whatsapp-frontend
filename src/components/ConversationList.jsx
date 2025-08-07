@@ -13,17 +13,16 @@ const ConversationList = ({ conversations, onSelectConversation }) => {
         <h2 className="text-xl font-semibold text-green-600">WhatsApp</h2>
         <div className="flex items-center gap-4">
          <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-          <RiChatNewLine size={24} />
-          
+          <RiChatNewLine size={24} className="text-black cursor-pointer" />
         </div>
         <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-        <BsThreeDotsVertical size={20} className="cursor-pointer"/>
+        <BsThreeDotsVertical size={20} className="text-black cursor-pointer"/>
         </div>
         </div>
       </header>
       <div className="flex items-center gap-3 bg-gray-100 rounded-full px-4 py-2 mx-6">
         <div>
-          <IoSearchOutline size={20} className="text-gray-500" />
+          <IoSearchOutline size={20} className="text-black cursor-pointer" />
         </div>
         <div className="w-full">
           <input

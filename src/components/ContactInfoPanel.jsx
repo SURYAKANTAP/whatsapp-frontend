@@ -13,12 +13,12 @@ const ContactInfoPanel = ({ name, phone, onClose }) => {
       <header className="flex items-center px-4 py-3 bg-white justify-between">
         <div className='flex items-center'>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 mr-4">
-          <IoClose size={24} className="text-gray-600" />
+          <IoClose size={24} className="text-black cursor-pointer" />
         </button>
         <h2 className="text-md font-medium text-gray-800">Contact info</h2>
         </div>
         <div className='p-2 rounded-full hover:bg-gray-100'>
-        <IoPencil size={23} />
+        <IoPencil size={23} className="text-black cursor-pointer" />
         </div>
       </header>
 

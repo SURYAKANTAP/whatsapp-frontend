@@ -43,24 +43,24 @@ const ChatLayout = ({ initialConversations }) => {
         <div className="flex flex-col gap-4 items-center">
           {/* Wrap each icon in a div for padding and background */}
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <MdOutlineMessage size={26} className="text-gray-600" />
+            <MdOutlineMessage size={26} className="text-gray-600 cursor-pointer" />
           </div>
 
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <TbCircleDashed size={26} className="text-gray-600" />
+            <TbCircleDashed size={26} className="text-gray-600 cursor-pointer" />
           </div>
 
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <MdCampaign size={26} className="text-gray-600" />
+            <MdCampaign size={26} className="text-gray-600 cursor-pointer" />
           </div>
 
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <HiOutlineUserGroup size={26} className="text-gray-600" />
+            <HiOutlineUserGroup size={26} className="text-gray-600 cursor-pointer" />
           </div>
         </div>
         <div className=" justify-center items-center flex flex-col gap-6">
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <IoSettingsOutline size={26} />
+            <IoSettingsOutline size={26} className="text-gray-600 cursor-pointer" />
           </div>
           <div className="w-10 h-10 rounded-full bg-gray-300 cursor-pointer">
             <img src="/user.png" alt="Avatar" />

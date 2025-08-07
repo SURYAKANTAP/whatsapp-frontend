@@ -119,7 +119,7 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
             onClick={onBack}
             className="md:hidden mr-2 p-1 rounded-full hover:bg-slate-200 cursor-pointer"
           >
-            <IoArrowBack size={22} className="text-slate-600" />
+            <IoArrowBack size={22} className="text-black cursor-pointer" />
           </div>
           <div className="flex items-center cursor-pointer" onClick={() => onHeaderClick(conversationInfo)}>
             <div className="w-10 h-10 rounded-full mr-4">
@@ -132,13 +132,13 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
         </div>
         <div className="flex items-center space-x-5 text-slate-600">
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <FiVideo size={20} className="cursor-pointer" />
+            <FiVideo size={20} className="cursor-pointer text-black" />
           </div>
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <IoSearch size={20} className="cursor-pointer" />
+            <IoSearch size={20} className="cursor-pointer text-black" />
           </div>
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <BsThreeDotsVertical size={20} className="cursor-pointer" />
+            <BsThreeDotsVertical size={20} className="cursor-pointer text-black" />
           </div>
         </div>
       </header>
@@ -160,10 +160,10 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
 
       <footer className="px-3 py-2 mx-3 my-3 rounded-full bg-[white] flex items-center space-x-1 flex-none shadow-2xl">
         <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-          <GrAttachment size={22} className="text-slate-500 cursor-pointer" />
+          <GrAttachment size={22} className="text-black cursor-pointer" />
         </div>
         <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-          <FaRegSmile size={24} className="text-slate-500 cursor-pointer" />
+          <FaRegSmile size={24} className="text-black cursor-pointer" />
         </div>
 
         <form onSubmit={handleSendMessage} className="flex-grow">
@@ -172,7 +172,7 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message"
-            className="w-full p-2.5 rounded-lg text-sm focus:outline-none"
+            className="w-full p-2.5 rounded-lg text-sm focus:outline-none text-gray-700"
           />
         </form>
         <button
