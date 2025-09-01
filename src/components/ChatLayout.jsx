@@ -11,32 +11,46 @@ import { HiOutlineUserGroup } from "react-icons/hi2";
 import { IoSettingsOutline } from "react-icons/io5";
 import ContactInfoPanel from "./ContactInfoPanel";
 import EmptyState from "./EmptyState";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { jwtDecode } from "jwt-decode"; // Import jwtDecode
 
 // This component receives the initial data as a prop.
-const ChatLayout = ({ initialConversations }) => {
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
+const ChatLayout = () => {
+   const [selectedOtherUserId, setSelectedOtherUserId] = useState(null);
   const [isContactInfoVisible, setIsContactInfoVisible] = useState(false);
   const [currentContactInfo, setCurrentContactInfo] = useState(null);
-  useEffect(() => {
+   const [currentUserEmail, setCurrentUserEmail] = useState(""); // State for own email
+   const { token } = useAuth();
+
+    useEffect(() => {
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      setCurrentUserEmail(decodedToken.user.email);
+    }
+  }, [token]);
+   useEffect(() => {
     setIsContactInfoVisible(false);
-  }, [selectedConversationId]);
+  }, [selectedOtherUserId]);
   const handleHeaderClick = (contactInfo) => {
     setCurrentContactInfo(contactInfo);
     setIsContactInfoVisible((prev) =>
-      prev && currentContactInfo?.phone === contactInfo.phone ? false : true
+      prev && currentContactInfo?.email === contactInfo.email ? false : true
     );
   };
 
+
+   // This new function is for showing OUR OWN profile
+  const handleShowProfile = (profileInfo) => {
+    setCurrentContactInfo(profileInfo);
+    setIsContactInfoVisible(true); // Always open it when the button is clicked
+  };
   const handleCloseContactInfo = () => {
     setIsContactInfoVisible(false); // Hide the panel
   };
-  const handleSelectConversation = (wa_id) => {
-    setSelectedConversationId(wa_id);
+  const handleSelectConversation = (otherUserId) => {
+    setSelectedOtherUserId(otherUserId);
   };
-  // LOGIC: Function to go back to the list view on mobile
-  const handleBack = () => {
-    setSelectedConversationId(null);
-  };
+   const isMyProfile = currentContactInfo?.email === currentUserEmail;
   return (
     <main className="flex h-screen bg-white overflow-hidden">
       <div className="md:flex hidden flex-col w-20 border-r border-slate-200 items-center py-5 justify-between bg-gray-50">
@@ -69,21 +83,21 @@ const ChatLayout = ({ initialConversations }) => {
       </div>
       <div className={`
           flex-shrink-0 w-full md:w-80 lg:w-96
-          ${selectedConversationId ? "hidden" : "flex"} md:flex
+          ${selectedOtherUserId ? "hidden" : "flex"} md:flex
           border-r border-slate-200
       `}>
         <ConversationList
-          conversations={initialConversations}
           onSelectConversation={handleSelectConversation}
+           onShowProfile={handleShowProfile}
         />
       </div>
       <div className="flex-1 flex h-full">
         {/* STYLE: On mobile, this is shown ONLY if a chat is selected. On desktop, it's always visible. */}
         <div className={`h-full w-full ${isContactInfoVisible ? 'hidden lg:flex' : 'flex'}`}>
-          {selectedConversationId ? (
+          {selectedOtherUserId ? (
             <ChatPanel
-              conversationId={selectedConversationId}
-              onBack={() => setSelectedConversationId(null)}
+              otherUserId={selectedOtherUserId}
+              onBack={() => setSelectedOtherUserId(null)}
               onHeaderClick={handleHeaderClick} // Pass the handler down
             />
           ) : (
@@ -93,8 +107,8 @@ const ChatLayout = ({ initialConversations }) => {
         {isContactInfoVisible && (
            <div className="h-full w-full lg:w-96 flex-shrink-0">
             <ContactInfoPanel
-              name={currentContactInfo?.name}
-              phone={currentContactInfo?.phone}
+             title={isMyProfile ? "Profile" : "Contact Info"}
+              name={currentContactInfo?.email}
               onClose={handleCloseContactInfo}
             />
           </div>

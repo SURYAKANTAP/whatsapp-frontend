@@ -10,24 +10,20 @@ import { IoSearch } from "react-icons/io5";
 import { GrAttachment } from "react-icons/gr";
 import { FaRegSmile } from "react-icons/fa";
 import EmptyState from "./EmptyState";
-import ContactInfoPanel from "./ContactInfoPanel";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import { jwtDecode } from "jwt-decode";
 
-const MessageBubble = ({ msg, conversationId }) => {
-  // This logic correctly determines if the message is from you or the other user.
-  // The 'status' field is only added to messages sent from our own UI.
-  console.log(
-    `Message: "${msg.text}", From: ${msg.from}, isYou: ${
-      msg.from !== conversationId
-    }`
-  );
-  const isYou = msg.from !== conversationId;
+
+const MessageBubble = ({ msg, myUserId }) => {
+  
+  const isYou = msg.sender === myUserId;
 
   const statusIcon = {
     sent: <BsCheck size={18} className="text-gray-500" />,
     delivered: <BsCheckAll size={18} className="text-gray-500" />,
     read: <BsCheckAll size={18} className="text-blue-500" />,
   };
-
   return (
     <div className={`flex w-full ${isYou ? "justify-end" : "justify-start"}`}>
       <div
@@ -50,60 +46,103 @@ const MessageBubble = ({ msg, conversationId }) => {
   );
 };
 
-const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
-  const socket = useSocket(); // Get the socket from our context
+const ChatPanel = ({ otherUserId, onBack, onHeaderClick }) => {
+ 
+
+  const [conversationInfo, setConversationInfo] = useState(null);
+
+const socket = useSocket();
+  const { token } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [conversationInfo, setConversationInfo] = useState(null);
+    const [otherUserEmail, setOtherUserEmail] = useState("Loading..."); // State for header email
   const messagesEndRef = useRef(null);
 
+  
+  
+
+  
+  const myUserId = token ? jwtDecode(token).user.id : null;
+  // 1. Fetch initial message history when a chat is opened
+useEffect(() => {
+    // Reset state when switching conversations
+    setMessages([]); 
+ setOtherUserEmail("Loading...");
+    if (otherUserId && socket) {
+      const fetchChatHistory = async () => {
+        try {
+           const [messagesRes, userRes] = await Promise.all([
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${otherUserId}`),
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${otherUserId}`)
+          ]);
+          setMessages(messagesRes.data);
+          console.log("Fetched messages:", messagesRes.data);
+          // You might want to fetch the other user's info too
+          // For now, we can infer it from the first message if it exists
+          setOtherUserEmail(userRes.data.email);
+ socket.emit('markAsRead', { otherUserId });
+        } catch (error) {
+          console.error("Failed to fetch message history:", error);
+          setOtherUserEmail("Chat");
+        }
+      };
+      fetchChatHistory();
+    }
+  }, [otherUserId, socket]);
+
+  // 2. Listen for REAL-TIME and MISSED messages from the socket
   useEffect(() => {
-    if (!socket || !conversationId) return;
+    if (!socket) return;
 
-    // Join the conversation room and request message history
-    socket.emit("joinRoom", conversationId);
-
-    // Listener for the initial message load
-    socket.on("loadMessages", (loadedMessages) => {
-      setMessages(loadedMessages);
-      // console.log("Loaded messages:", loadedMessages);
-      if (loadedMessages.length > 0) {
-        setConversationInfo({
-          name: loadedMessages[0].name,
-          phone: loadedMessages[0].from,
-        });
+    const handleNewMessage = (newMessage) => {
+      // Add message only if it belongs to the currently open chat
+      const involved = [newMessage.sender, newMessage.recipient];
+      if (involved.includes(myUserId) && involved.includes(otherUserId)) {
+        setMessages((prev) => [...prev, newMessage]);
+        socket.emit('markAsRead', { otherUserId });
       }
-    });
-
-    // Listener for new incoming messages
-    socket.on("receiveMessage", (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    });
-
-    // --- Cleanup function to prevent memory leaks ---
-    return () => {
-      socket.off("loadMessages");
-      socket.off("receiveMessage");
     };
-  }, [socket, conversationId]);
+    const handleMessagesRead = (data) => {
+      // Check if the update is for the conversation we currently have open
+      if (data.conversationPartnerId === otherUserId) {
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.sender === myUserId ? { ...msg, status: 'read' } : msg
+          )
+        );
+      }
+    };
+    
 
+      socket.on('receiveMessage', handleNewMessage);
+    socket.on('messagesRead', handleMessagesRead); // Add the new listener
+
+    return () => {
+      socket.off('receiveMessage', handleNewMessage);
+      socket.off('messagesRead', handleMessagesRead);
+    };
+  }, [socket, myUserId, otherUserId]);
+
+  // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (newMessage.trim() === "" || !socket) return;
+    if (newMessage.trim() === "" || !socket || !myUserId) return;
 
-    // No more optimistic UI needed, the server is the source of truth
     socket.emit("sendMessage", {
-      wa_id: conversationId,
       text: newMessage,
+      sender: myUserId,
+      recipient: otherUserId,
     });
     setNewMessage("");
   };
 
-  if (!conversationId) {
+
+
+  if (!otherUserId) {
     return <EmptyState />;
   }
 
@@ -121,12 +160,12 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
           >
             <IoArrowBack size={22} className="text-black cursor-pointer" />
           </div>
-          <div className="flex items-center cursor-pointer" onClick={() => onHeaderClick(conversationInfo)}>
+          <div className="flex items-center cursor-pointer" onClick={() => onHeaderClick({ email: otherUserEmail })}>
             <div className="w-10 h-10 rounded-full mr-4">
               <img src="/user.png" alt="Avatar" />
             </div>
             <h2 className="font-medium text-slate-700">
-              {conversationInfo?.name || "Loading..."}
+              {otherUserEmail || "Loading..."}
             </h2>
           </div>
         </div>
@@ -152,7 +191,7 @@ const ChatPanel = ({ conversationId, onBack, onHeaderClick }) => {
           <MessageBubble
             key={msg.id}
             msg={msg}
-            conversationId={conversationId}
+            myUserId={myUserId}
           />
         ))}
         <div ref={messagesEndRef} />
