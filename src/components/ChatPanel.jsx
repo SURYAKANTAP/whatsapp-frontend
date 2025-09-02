@@ -14,9 +14,7 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { jwtDecode } from "jwt-decode";
 
-
 const MessageBubble = ({ msg, myUserId }) => {
-  
   const isYou = msg.sender === myUserId;
 
   const statusIcon = {
@@ -47,40 +45,38 @@ const MessageBubble = ({ msg, myUserId }) => {
 };
 
 const ChatPanel = ({ otherUserId, onBack, onHeaderClick }) => {
- 
-
   const [conversationInfo, setConversationInfo] = useState(null);
 
-const socket = useSocket();
+  const socket = useSocket();
   const { token } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-    const [otherUserEmail, setOtherUserEmail] = useState("Loading..."); // State for header email
+  const [otherUserEmail, setOtherUserEmail] = useState("Loading..."); // State for header email
   const messagesEndRef = useRef(null);
 
-  
-  
-
-  
   const myUserId = token ? jwtDecode(token).user.id : null;
   // 1. Fetch initial message history when a chat is opened
-useEffect(() => {
+  useEffect(() => {
     // Reset state when switching conversations
-    setMessages([]); 
- setOtherUserEmail("Loading...");
+    setMessages([]);
+    setOtherUserEmail("Loading...");
     if (otherUserId && socket) {
       const fetchChatHistory = async () => {
         try {
-           const [messagesRes, userRes] = await Promise.all([
-            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${otherUserId}`),
-            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/${otherUserId}`)
+          const [messagesRes, userRes] = await Promise.all([
+            axios.get(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/messages/${otherUserId}`
+            ),
+            axios.get(
+              `${process.env.NEXT_PUBLIC_API_URL}/users/${otherUserId}`
+            ),
           ]);
           setMessages(messagesRes.data);
           console.log("Fetched messages:", messagesRes.data);
           // You might want to fetch the other user's info too
           // For now, we can infer it from the first message if it exists
           setOtherUserEmail(userRes.data.email);
- socket.emit('markAsRead', { otherUserId });
+          socket.emit("markAsRead", { otherUserId });
         } catch (error) {
           console.error("Failed to fetch message history:", error);
           setOtherUserEmail("Chat");
@@ -99,27 +95,26 @@ useEffect(() => {
       const involved = [newMessage.sender, newMessage.recipient];
       if (involved.includes(myUserId) && involved.includes(otherUserId)) {
         setMessages((prev) => [...prev, newMessage]);
-        socket.emit('markAsRead', { otherUserId });
+        socket.emit("markAsRead", { otherUserId });
       }
     };
     const handleMessagesRead = (data) => {
       // Check if the update is for the conversation we currently have open
       if (data.conversationPartnerId === otherUserId) {
-        setMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.sender === myUserId ? { ...msg, status: 'read' } : msg
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.sender === myUserId ? { ...msg, status: "read" } : msg
           )
         );
       }
     };
-    
 
-      socket.on('receiveMessage', handleNewMessage);
-    socket.on('messagesRead', handleMessagesRead); // Add the new listener
+    socket.on("receiveMessage", handleNewMessage);
+    socket.on("messagesRead", handleMessagesRead); // Add the new listener
 
     return () => {
-      socket.off('receiveMessage', handleNewMessage);
-      socket.off('messagesRead', handleMessagesRead);
+      socket.off("receiveMessage", handleNewMessage);
+      socket.off("messagesRead", handleMessagesRead);
     };
   }, [socket, myUserId, otherUserId]);
 
@@ -140,8 +135,6 @@ useEffect(() => {
     setNewMessage("");
   };
 
-
-
   if (!otherUserId) {
     return <EmptyState />;
   }
@@ -160,12 +153,29 @@ useEffect(() => {
           >
             <IoArrowBack size={22} className="text-black cursor-pointer" />
           </div>
-          <div className="flex items-center cursor-pointer" onClick={() => onHeaderClick({ email: otherUserEmail })}>
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => onHeaderClick({ email: otherUserEmail })}
+          >
             <div className="w-10 h-10 rounded-full mr-4">
               <img src="/user.png" alt="Avatar" />
             </div>
-            <h2 className="font-medium text-slate-700">
-              {otherUserEmail || "Loading..."}
+            <h2 className="font-medium text-slate-700 truncate">
+              {/* --- MODIFICATION START --- */}
+
+              {/* Show truncated email on mobile (screens smaller than 'md') */}
+              <span className="md:hidden">
+                {otherUserEmail && otherUserEmail.length > 5
+                  ? `${otherUserEmail.substring(0, 5)}...`
+                  : otherUserEmail}
+              </span>
+
+              {/* Show full email on desktop (screens 'md' and larger) */}
+              <span className="hidden md:inline">
+                {otherUserEmail || "Loading..."}
+              </span>
+
+              {/* --- MODIFICATION END --- */}
             </h2>
           </div>
         </div>
@@ -177,7 +187,10 @@ useEffect(() => {
             <IoSearch size={20} className="cursor-pointer text-black" />
           </div>
           <div className="p-2 rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            <BsThreeDotsVertical size={20} className="cursor-pointer text-black" />
+            <BsThreeDotsVertical
+              size={20}
+              className="cursor-pointer text-black"
+            />
           </div>
         </div>
       </header>
@@ -188,11 +201,7 @@ useEffect(() => {
       >
         {messages.map((msg) => (
           // FIX: Pass the `conversationId` prop down to each bubble
-          <MessageBubble
-            key={msg.id}
-            msg={msg}
-            myUserId={myUserId}
-          />
+          <MessageBubble key={msg.id} msg={msg} myUserId={myUserId} />
         ))}
         <div ref={messagesEndRef} />
       </main>

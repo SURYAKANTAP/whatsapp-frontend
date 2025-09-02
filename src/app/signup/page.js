@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
+import Image from 'next/image';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -35,6 +36,15 @@ const SignupPage = () => {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50">
       <div className="p-8 bg-white rounded-lg shadow-lg w-full max-w-sm">
+        <div className="flex justify-center mb-4">
+                  <Image
+                    src="/whatsapplogo.png" // The path starts from the public folder
+                    alt="WhatsApp Logo"
+                    width={80}      // Required property for layout stability
+                    height={80}     // Required property for layout stability
+                    priority        // Optional: Tells Next.js to load this image first
+                  />
+                </div>
         <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
           Create your Account
         </h1>
@@ -46,7 +56,7 @@ const SignupPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
               required
             />
           </div>
@@ -56,7 +66,7 @@ const SignupPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-800"
               required
             />
           </div>

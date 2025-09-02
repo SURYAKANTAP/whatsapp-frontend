@@ -83,7 +83,7 @@ const ChatLayout = () => {
       </div>
       <div className={`
           flex-shrink-0 w-full md:w-80 lg:w-96
-          ${selectedOtherUserId ? "hidden" : "flex"} md:flex
+          ${selectedOtherUserId || isContactInfoVisible ? "hidden" : "flex"} md:flex
           border-r border-slate-200
       `}>
         <ConversationList
