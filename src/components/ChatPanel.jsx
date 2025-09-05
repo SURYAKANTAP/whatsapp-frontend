@@ -54,6 +54,8 @@ const ChatPanel = ({ otherUserId, onBack, onHeaderClick }) => {
   const [otherUserEmail, setOtherUserEmail] = useState("Loading..."); // State for header email
   const messagesEndRef = useRef(null);
 
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState(false);
+
   const myUserId = token ? jwtDecode(token).user.id : null;
   // 1. Fetch initial message history when a chat is opened
   useEffect(() => {
@@ -85,6 +87,61 @@ const ChatPanel = ({ otherUserId, onBack, onHeaderClick }) => {
       fetchChatHistory();
     }
   }, [otherUserId, socket]);
+
+  // --- NEW EFFECT: Listen for online users and update status ---
+  useEffect(() => {
+    // Log the dependencies to see when this effect runs
+    console.log(
+      `[ChatPanel Effect] Running for otherUserId: ${otherUserId}. Socket is ${
+        socket ? "available" : "not available"
+      }.`
+    );
+
+    if (!socket) {
+      console.log("[ChatPanel Effect] Aborting: Socket is not ready.");
+      return;
+    }
+
+    const handleOnlineUsers = (onlineUserIds) => {
+      // 1. THIS IS THE MOST IMPORTANT LOG: DO WE RECEIVE THE EVENT?
+      console.log("[Socket Event Received] onlineUsersUpdate:", onlineUserIds);
+
+      // 2. LOG THE DATA WE ARE CHECKING AGAINST
+      console.log(
+        `[Socket Event Logic] Checking if user ${otherUserId} is in the list.`
+      );
+
+      if (!Array.isArray(onlineUserIds)) {
+        console.error(
+          "[Socket Event Logic] Error: The data received is not an array!",
+          onlineUserIds
+        );
+        return;
+      }
+
+      const isOnline = onlineUserIds.includes(otherUserId);
+
+      // 3. LOG THE RESULT OF OUR CHECK
+      console.log(`[Socket Event Logic] Is user online? ${isOnline}`);
+
+      setIsOtherUserOnline(isOnline);
+    };
+
+    // Set up the listener
+    socket.on("onlineUsersUpdate", handleOnlineUsers);
+
+    // Also, ask the server for the current list right away when we open a chat
+    // This handles the case where the chat is opened after the last update was sent.
+    socket.emit("getInitialOnlineUsers"); // You will need to add a handler for this on the backend
+
+    // Clean up the listener when the component unmounts or dependencies change
+    return () => {
+      console.log(
+        `[ChatPanel Cleanup] Removing listener for otherUserId: ${otherUserId}`
+      );
+      socket.off("onlineUsersUpdate", handleOnlineUsers);
+    };
+  }, [socket, otherUserId]); // Rerun this effect if the socket or the other user changes
 
   // 2. Listen for REAL-TIME and MISSED messages from the socket
   useEffect(() => {
@@ -160,23 +217,33 @@ const ChatPanel = ({ otherUserId, onBack, onHeaderClick }) => {
             <div className="w-10 h-10 rounded-full mr-4">
               <img src="/user.png" alt="Avatar" />
             </div>
-            <h2 className="font-medium text-slate-700 truncate">
-              {/* --- MODIFICATION START --- */}
+            <div>
+              <h2 className="font-medium text-slate-700 truncate">
+                {/* --- MODIFICATION START --- */}
 
-              {/* Show truncated email on mobile (screens smaller than 'md') */}
-              <span className="md:hidden">
-                {otherUserEmail && otherUserEmail.length > 5
-                  ? `${otherUserEmail.substring(0, 5)}...`
-                  : otherUserEmail}
-              </span>
+                {/* Show truncated email on mobile (screens smaller than 'md') */}
+                <span className="md:hidden">
+                  {otherUserEmail && otherUserEmail.length > 5
+                    ? `${otherUserEmail.substring(0, 5)}...`
+                    : otherUserEmail}
+                </span>
 
-              {/* Show full email on desktop (screens 'md' and larger) */}
-              <span className="hidden md:inline">
-                {otherUserEmail || "Loading..."}
-              </span>
+                {/* Show full email on desktop (screens 'md' and larger) */}
+                <span className="hidden md:inline">
+                  {otherUserEmail || "Loading..."}
+                </span>
 
-              {/* --- MODIFICATION END --- */}
-            </h2>
+                {/* --- MODIFICATION END --- */}
+              </h2>
+              <p className="text-xs text-gray-500">
+                {/* --- Conditionally render online/offline status --- */}
+                {isOtherUserOnline ? (
+                  <span className="text-green-500">online</span>
+                ) : (
+                  "offline"
+                )}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center space-x-5 text-slate-600">
