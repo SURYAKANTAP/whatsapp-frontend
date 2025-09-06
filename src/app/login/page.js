@@ -1,36 +1,36 @@
 // frontend/src/app/login/page.js
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import axios from 'axios';
-import Image from 'next/image';
+import React, { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
+import Image from "next/image";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
       // Use the environment variable for your API URL
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/login`;
       const response = await axios.post(apiUrl, { email, password });
-      
+
       // The login function from context will save the token
       login(response.data.token);
 
       // Redirect to the main chat page on successful login
-      router.push('/');
+      router.replace("/");
     } catch (err) {
-      setError('Failed to login. Please check your credentials.');
-      console.error('Login error:', err);
+      setError("Failed to login. Please check your credentials.");
+      console.error("Login error:", err);
     }
   };
 
@@ -41,9 +41,9 @@ const LoginPage = () => {
           <Image
             src="/whatsapplogo.png" // The path starts from the public folder
             alt="WhatsApp Logo"
-            width={80}      // Required property for layout stability
-            height={80}     // Required property for layout stability
-            priority        // Optional: Tells Next.js to load this image first
+            width={80} // Required property for layout stability
+            height={80} // Required property for layout stability
+            priority // Optional: Tells Next.js to load this image first
           />
         </div>
         <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
@@ -79,7 +79,7 @@ const LoginPage = () => {
           </button>
         </form>
         <p className="text-center text-sm text-gray-600 mt-4">
-          Don&apos;t have an account?{' '}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-green-600 hover:underline">
             Sign up
           </Link>

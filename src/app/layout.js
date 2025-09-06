@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SocketProvider } from "@/context/SocketContext";
 import { AuthProvider } from "@/context/AuthContext";
+import AuthGuard from "@/context/AuthGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +26,9 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <SocketProvider>
-            {children}
-          </SocketProvider>
+          <AuthGuard>
+            <SocketProvider>{children}</SocketProvider>
+          </AuthGuard>
         </AuthProvider>
       </body>
     </html>
